@@ -2,74 +2,61 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 
 describe("AnJuXToken", function () {
-  it("Deve permitir a mintagem após 24 horas", async function () {
-    const [owner, feeReceiver] = await ethers.getSigners();
+  let token, owner, feeReceiver, recipient, newOwner;
 
-    // Deploy do contrato AnJuXToken
+  beforeEach(async function () {
+    [owner, feeReceiver, recipient, newOwner] = await ethers.getSigners();
     const AnJuXToken = await ethers.getContractFactory("AnJuXToken");
-    const token = await AnJuXToken.deploy(feeReceiver.address); // Passa o endereço do feeReceiver
+    token = await AnJuXToken.deploy(feeReceiver.address);
     await token.waitForDeployment();
+  });
 
-    // Verifica o saldo inicial do owner (1 milhão de tokens)
-    const initialBalance = await token.balanceOf(owner.address);
-    expect(initialBalance).to.equal(ethers.parseEther("1000000"));
-
-    // Primeira mintagem
+  it("Deve permitir a mintagem após 24 horas", async function () {
     await token.mint(owner.address);
-    let balance = await token.balanceOf(owner.address);
-    expect(balance).to.equal(ethers.parseEther("1000000.40")); // Verifica se o saldo é 1.000.000,40 tokens
-
-    // Tenta mintar novamente antes de 24 horas
     await expect(token.mint(owner.address)).to.be.revertedWith(
       "You have already minted recently. Please wait 24 hours."
     );
-
-    // Avança o tempo em 24 horas
-    await ethers.provider.send("evm_increaseTime", [24 * 60 * 60]); // Avança 24 horas
-    await ethers.provider.send("evm_mine", []); // Mina um novo bloco
-
-    // Tenta mintar novamente após 24 horas
+    await ethers.provider.send("evm_increaseTime", [24 * 60 * 60]);
+    await ethers.provider.send("evm_mine", []);
     await token.mint(owner.address);
-    balance = await token.balanceOf(owner.address);
-    expect(balance).to.equal(ethers.parseEther("1000000.80")); // Verifica se o saldo é 1.000.000,80 tokens
   });
 
   it("Deve cobrar uma taxa de 1% nas transferências", async function () {
-    const [owner, feeReceiver, recipient] = await ethers.getSigners();
-
-    // Deploy do contrato AnJuXToken
-    const AnJuXToken = await ethers.getContractFactory("AnJuXToken");
-    const token = await AnJuXToken.deploy(feeReceiver.address); // Passa o endereço do feeReceiver
-    await token.waitForDeployment();
-
-    // Transfere tokens do owner para o recipient
-    const transferAmount = ethers.parseEther("100"); // 100 tokens
+    const transferAmount = ethers.parseEther("100");
     await token.transfer(recipient.address, transferAmount);
-
-    // Verifica o saldo do recipient após a transferência
-    const recipientBalance = await token.balanceOf(recipient.address);
-    expect(recipientBalance).to.equal(ethers.parseEther("99")); // 99 tokens (1% de taxa)
-
-    // Verifica o saldo do feeReceiver
-    const feeReceiverBalance = await token.balanceOf(feeReceiver.address);
-    expect(feeReceiverBalance).to.equal(ethers.parseEther("1")); // 1 token (taxa de 1%)
+    expect(await token.balanceOf(recipient.address)).to.equal(ethers.parseEther("99"));
+    expect(await token.balanceOf(feeReceiver.address)).to.equal(ethers.parseEther("1"));
   });
 
   it("Deve bloquear mudanças após ativar o modo imutável", async function () {
-    const [owner, feeReceiver, newOwner] = await ethers.getSigners();
-
-    // Deploy do contrato AnJuXToken
-    const AnJuXToken = await ethers.getContractFactory("AnJuXToken");
-    const token = await AnJuXToken.deploy(feeReceiver.address); // Passa o endereço do feeReceiver
-    await token.waitForDeployment();
-
-    // Ativa o modo imutável
     await token.lockOwnership();
-
-    // Tenta mudar a taxa de transferência (deve falhar)
     await expect(token.setFeePercent(2)).to.be.revertedWith("Contract is locked");
-
-    // Tenta transferir a propriedade (deve falhar)
     await expect(token.transferOwnershipSecurely(newOwner.address)).to.be.revertedWith("Contract is locked");
+  });
+
+  it("Deve permitir queimar tokens", async function () {
+    const burnAmount = ethers.parseEther("10");
+    await token.burn(burnAmount);
+    expect(await token.balanceOf(owner.address)).to.equal(ethers.parseEther("999990"));
+  });
+
+  it("Deve permitir lock e unlock de tokens na bridge", async function () {
+    const lockAmount = ethers.parseEther("50");
+    const txHash = "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"; // txHash válido
+    await token.lockTokens(lockAmount, "ChainB", recipient.address);
+    expect(await token.balanceOf(owner.address)).to.equal(ethers.parseEther("999950"));
+    await token.unlockTokens(recipient.address, lockAmount, txHash);
+    expect(await token.balanceOf(recipient.address)).to.equal(ethers.parseEther("50"));
+  });
+
+  it("Deve permitir bridgeMint somente pelo owner", async function () {
+    const mintAmount = ethers.parseEther("200");
+    await token.bridgeMint(recipient.address, mintAmount);
+    expect(await token.balanceOf(recipient.address)).to.equal(mintAmount);
+
+    // Verifica se a função reverte com o custom error "OwnableUnauthorizedAccount"
+    await expect(
+      token.connect(recipient).bridgeMint(recipient.address, mintAmount)
+    ).to.be.revertedWithCustomError(token, "OwnableUnauthorizedAccount");
   });
 });

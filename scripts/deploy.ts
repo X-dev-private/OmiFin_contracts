@@ -22,12 +22,10 @@ async function main() {
 
   console.log("Iniciando o deploy dos contratos...");
 
-  // Faz o deploy dos contratos
-  const [usdCoF, ETHoF, AnJuX] = await Promise.all([
-    deployToken("USDCoFToken", feeReceiver),
-    deployToken("ETHoFToken", feeReceiver),
-    deployToken("AnJuXToken", feeReceiver),
-  ]);
+  // Faz o deploy dos contratos sequencialmente
+  const usdCoF = await deployToken("USDCoFToken", feeReceiver);
+  const ETHoF = await deployToken("ETHoFToken", feeReceiver);
+  const AnJuX = await deployToken("AnJuXToken", feeReceiver);
 
   // Salva os endereços dos contratos em um arquivo JSON
   const addresses = {

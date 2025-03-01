@@ -12,12 +12,18 @@ npx hardhat node
 npx hardhat ignition deploy ./ignition/modules/Lock.ts
 ```
 
-contract address :
+contract address sonic : 
+
+"USDCoFToken": "0x32c00bD194B3ea78B9799394984DF8dB7397B834",
+"ETHoFToken": "0x1429c6F2Be05EFF1fB07F52D9D4880a108153dD4",
+"AnJuXToken": "0x6c3aaaA93CC59f5A4288465F073C2B94DDBD3a05"
+
+contract address sepolia :
 
 USDCoFToken: 0x32c00bD194B3ea78B9799394984DF8dB7397B834
 ETHoFToken: 0x1429c6F2Be05EFF1fB07F52D9D4880a108153dD4
 AnJuXToken: 0x6c3aaaA93CC59f5A4288465F073C2B94DDBD3a05
 
-confirm address : 
+confirm address sepolia : 
 
 npx hardhat verify --network sepolia 0x6c3aaaA93CC59f5A4288465F073C2B94DDBD3a05
