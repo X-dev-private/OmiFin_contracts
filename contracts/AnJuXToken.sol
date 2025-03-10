@@ -65,10 +65,4 @@ contract AnJuXToken is ERC20, Ownable {
         super.transferFrom(sender, feeReceiver, fee);
         return super.transferFrom(sender, recipient, amountAfterFee);
     }
-
-    // Função para aprovar gastos por um contrato externo
-    function approveSpender(address spender, uint256 amount) external returns (bool) {
-        _approve(msg.sender, spender, amount);
-        return true;
-    }
 }

@@ -66,8 +66,4 @@ contract ETHoFToken is ERC20, Ownable {
         return super.transferFrom(sender, recipient, amountAfterFee);
     }
 
-    function approveSpender(address spender, uint256 amount) external returns (bool) {
-        _approve(msg.sender, spender, amount);
-        return true;
-    }
 }
