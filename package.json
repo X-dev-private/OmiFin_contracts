@@ -3,7 +3,9 @@
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "@openzeppelin/contracts": "^5.2.0",
+    "@types/node": "^22.13.10",
     "dotenv": "^16.4.7",
-    "hardhat": "^2.22.18"
+    "hardhat": "^2.22.18",
+    "ts-node": "^10.9.2"
   }
 }

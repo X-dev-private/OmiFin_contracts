@@ -20,6 +20,11 @@ const config: HardhatUserConfig = {
       url: "https://rpc.blaze.soniclabs.com",
       accounts: process.env.SONIC_PRIVATE_KEY ? [process.env.SONIC_PRIVATE_KEY] : [],
     },
+    luksoTestnet: {
+      url: "https://rpc.testnet.lukso.network",
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      chainId: 4201,
+    },
   },
   etherscan: {
     apiKey: {

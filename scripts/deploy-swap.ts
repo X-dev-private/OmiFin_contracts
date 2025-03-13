@@ -14,8 +14,8 @@ async function main() {
   console.log("Conta do deploy:", deployer.address);
 
   // Configure manualmente os endereços dos tokens
-  const tokenAAddress = "0xD9BEF40A259Cc6458457313438d9deb1D74fbfD5"; 
-  const tokenBAddress = "0x32c00bD194B3ea78B9799394984DF8dB7397B834"; 
+  const tokenAAddress = "0x32c00bD194B3ea78B9799394984DF8dB7397B834"; 
+  const tokenBAddress = "0x1429c6F2Be05EFF1fB07F52D9D4880a108153dD4"; 
 
   // Deploy do contrato de swap
   const LiquidityPool = await ethers.getContractFactory("SimpleLiquidityPool");
