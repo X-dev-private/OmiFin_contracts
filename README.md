@@ -39,3 +39,8 @@ AnJuXToken: 0x6c3aaaA93CC59f5A4288465F073C2B94DDBD3a05
 confirm address sepolia : 
 
 npx hardhat verify --network sepolia 0x6c3aaaA93CC59f5A4288465F073C2B94DDBD3a05
+
+verify contract on network :
+
+npx hardhat verify --network arbitrumSepolia CONTRACT_ADDRESS "param1" "param2"
+
