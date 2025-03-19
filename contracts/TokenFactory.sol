@@ -5,7 +5,13 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract TokenFactory is Ownable {
-    event TokenCreated(address indexed tokenAddress, string name, string symbol, address feeReceiver, uint256 initialSupply);
+    event TokenCreated(address indexed tokenAddress, string name, string symbol, address feeReceiver, uint256 initialSupply, address creator);
+
+    // Mapeamento para armazenar os tokens criados por cada usuário
+    mapping(address => address[]) public ownerTokens;
+
+    // Lista de todos os tokens gerados
+    address[] public allTokens;
 
     constructor() Ownable(msg.sender) {}
 
@@ -13,11 +19,36 @@ contract TokenFactory is Ownable {
         string memory name,
         string memory symbol,
         uint256 initialSupply
-    ) external onlyOwner returns (address) {
-        // O owner da factory será o feeReceiver de todos os tokens criados
-        CustomToken newToken = new CustomToken(name, symbol, owner(), initialSupply);
-        emit TokenCreated(address(newToken), name, symbol, owner(), initialSupply);
-        return address(newToken);
+    ) external returns (address) {
+        // O dono da factory será o feeReceiver de todos os tokens criados
+        CustomToken newToken = new CustomToken(name, symbol, owner(), msg.sender, initialSupply);
+        address tokenAddress = address(newToken);
+
+        // Armazenar o token criado no mapeamento do criador
+        ownerTokens[msg.sender].push(tokenAddress);
+
+        // Adicionar o token à lista de todos os tokens gerados
+        allTokens.push(tokenAddress);
+
+        emit TokenCreated(tokenAddress, name, symbol, owner(), initialSupply, msg.sender);
+        return tokenAddress;
+    }
+
+    // Função para obter os tokens criados por um usuário específico
+    function getTokensByOwner(address owner) external view returns (address[] memory) {
+        return ownerTokens[owner];
+    }
+
+    // Função para recuperar todos os símbolos dos tokens gerados
+    function getAllTokenSymbols() external view returns (string[] memory) {
+        string[] memory symbols = new string[](allTokens.length);
+
+        for (uint256 i = 0; i < allTokens.length; i++) {
+            ERC20 token = ERC20(allTokens[i]);
+            symbols[i] = token.symbol();
+        }
+
+        return symbols;
     }
 }
 
@@ -35,10 +66,11 @@ contract CustomToken is ERC20, Ownable {
         string memory name,
         string memory symbol,
         address _feeReceiver,
+        address _owner,
         uint256 initialSupply
-    ) ERC20(name, symbol) Ownable(msg.sender) {
+    ) ERC20(name, symbol) Ownable(_owner) {
         require(_feeReceiver != address(0), "Invalid fee receiver");
-        _mint(msg.sender, initialSupply * 10 ** decimals()); // Criador recebe o supply inicial
+        _mint(_owner, initialSupply * 10 ** decimals()); // Criador recebe o supply inicial
         feeReceiver = _feeReceiver;
     }
 
