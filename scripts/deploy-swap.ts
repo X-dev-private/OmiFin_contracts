@@ -13,27 +13,17 @@ async function main() {
   const [deployer] = await ethers.getSigners();
   console.log("Conta do deploy:", deployer.address);
 
-  // Configure manualmente os endereços dos tokens
-  const tokenAAddress = "0x32c00bD194B3ea78B9799394984DF8dB7397B834"; 
-  const tokenBAddress = "0x1429c6F2Be05EFF1fB07F52D9D4880a108153dD4"; 
-
-  // Deploy do contrato de swap
-  const LiquidityPool = await ethers.getContractFactory("SimpleLiquidityPool");
-  const pool = await LiquidityPool.deploy(
-    tokenAAddress,
-    tokenBAddress,
-    deployer.address
-  );
-
-  await pool.waitForDeployment();
-  const poolAddress = await pool.getAddress();
+  // Deploy do contrato Factory
+  const PoolFactory = await ethers.getContractFactory("PoolFactory");
+  const factory = await PoolFactory.deploy();
+  
+  await factory.waitForDeployment();
+  const factoryAddress = await factory.getAddress();
 
   // Salvar com formatação personalizada
   const deploymentInfo = {
     network: (await ethers.provider.getNetwork()).chainId.toString(),
-    poolAddress: poolAddress,
-    tokenA: tokenAAddress,
-    tokenB: tokenBAddress,
+    factoryAddress: factoryAddress,
     deployer: deployer.address
   };
 
@@ -42,7 +32,8 @@ async function main() {
     JSON.stringify(deploymentInfo, replacer, 2)
   );
 
-  console.log("✅ Swap implantado:", poolAddress);
+  console.log("✅ PoolFactory implantado:", factoryAddress);
+  console.log("Use a função createPool() para criar novos pools de liquidez");
 }
 
 main().catch(console.error);

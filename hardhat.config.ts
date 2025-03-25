@@ -32,7 +32,26 @@ const config: HardhatUserConfig = {
     apiKey: {
       sepolia: process.env.ETHERSCAN_API_KEY,
       arbitrumSepolia: process.env.ARBISCAN_API_KEY,
+      sonic: process.env.SONIC_API_KEY,
     },
+    customChains: [
+      {
+        network: "sonic",
+        chainId: 57054,
+        urls: {
+          apiURL: "https://api-testnet.sonicscan.org/api",
+          browserURL: "https://testnet.sonicscan.org/"
+        }
+      },
+      {
+        network: "lukso testnet",
+        chainId: 4201,
+        urls: {
+          apiURL: "https://eth-sepolia.blockscout.com/api",
+          browserURL: "https://explorer.execution.testnet.lukso.network/"
+        }
+      }
+    ]
   },
 };
 
