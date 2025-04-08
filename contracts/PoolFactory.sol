@@ -14,6 +14,8 @@ contract PoolFactory is Ownable {
 
     mapping(address => address[]) public ownerPools;
     address[] public allPools;
+    // Mapeamento de token para pools que o contêm
+    mapping(address => address[]) public tokenToPools;
 
     constructor() Ownable(msg.sender) {}
 
@@ -29,13 +31,51 @@ contract PoolFactory is Ownable {
 
         ownerPools[msg.sender].push(poolAddress);
         allPools.push(poolAddress);
+        
+        // Adiciona o pool aos mapeamentos de ambos os tokens
+        tokenToPools[tokenA].push(poolAddress);
+        tokenToPools[tokenB].push(poolAddress);
 
         emit PoolCreated(poolAddress, tokenA, tokenB, msg.sender);
         return poolAddress;
     }
 
+    // Nova função que retorna todos os endereços de pools criados
+    function getAllPools() external view returns (address[] memory) {
+        return allPools;
+    }
+
+    // Nova função que retorna todos os dados de uma pool específica
+    function getPoolData(address poolAddress) external view returns (
+        address tokenA,
+        address tokenB,
+        uint256 reserveA,
+        uint256 reserveB,
+        uint256 feeNumerator,
+        uint256 feeDenominator,
+        uint256 totalLiquidity,
+        address poolOwner
+    ) {
+        SimpleLiquidityPool pool = SimpleLiquidityPool(poolAddress);
+        return (
+            address(pool.tokenA()),
+            address(pool.tokenB()),
+            pool.reserveA(),
+            pool.reserveB(),
+            pool.feeNumerator(),
+            pool.feeDenominator(),
+            pool.totalLiquidity(),
+            pool.owner()
+        );
+    }
+
     function getPoolsByOwner(address owner) external view returns (address[] memory) {
         return ownerPools[owner];
+    }
+
+    // Função para buscar pools que contêm um token específico
+    function getPoolsByToken(address token) external view returns (address[] memory) {
+        return tokenToPools[token];
     }
 
     function getAllPoolPairs() external view returns (address[2][] memory) {
@@ -80,6 +120,26 @@ contract SimpleLiquidityPool is Ownable {
     constructor(address _tokenA, address _tokenB, address initialOwner) Ownable(initialOwner) {
         tokenA = IERC20(_tokenA);
         tokenB = IERC20(_tokenB);
+    }
+
+    function getPoolData() external view returns (
+        address tokenAAddress,
+        address tokenBAddress,
+        uint256 tokenAReserve,
+        uint256 tokenBReserve,
+        uint256 currentFeeNumerator,
+        uint256 currentFeeDenominator,
+        uint256 poolTotalLiquidity
+    ) {
+        return (
+            address(tokenA),
+            address(tokenB),
+            reserveA,
+            reserveB,
+            feeNumerator,
+            feeDenominator,
+            totalLiquidity
+        );
     }
 
     function getUserDepositedTokens(address user) external view returns (uint256 amountA, uint256 amountB) {
